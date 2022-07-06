@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+    mariadb-main:
+      image: bitnami/mariadb:10.8-debian-11
+      container_name: db-main
+      ports:
+        - 3308:3306
+      volumes:
+        - mariadb-main:/bitnami/mariadb
+      restart: always
+      environment:
+        - MARIADB_REPLICATION_MODE=master
+        - MARIADB_REPLICATION_USER=repl_user
+        - MARIADB_REPLICATION_PASSWORD=repl_password
+        - MARIADB_ROOT_PASSWORD=main_root_password
+        - MARIADB_USER=app_user
+        - MARIADB_PASSWORD=app_password
+        - MARIADB_DATABASE=inf016_db
+      # env_file: main.conf
+    mariadb-backup:
+      image: bitnami/mariadb:10.8-debian-11
+      container_name: db-backup
+      ports:
+        - 3309:3306
+      volumes:
+        - mariadb-backup:/bitnami/mariadb
+      depends_on:
+        - mariadb-main
+      environment:
+        - MARIADB_REPLICATION_MODE=slave
+        - MARIADB_REPLICATION_USER=repl_user
+        - MARIADB_REPLICATION_PASSWORD=repl_password
+        - MARIADB_MASTER_HOST=mariadb-main
+        - MARIADB_MASTER_PORT_NUMBER=3306
+        - MARIADB_MASTER_ROOT_PASSWORD=main_root_password
+      # env_file: backup.conf
+
+volumes:
+  mariadb-main:
+  mariadb-backup:
